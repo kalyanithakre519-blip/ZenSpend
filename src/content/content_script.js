@@ -33,7 +33,7 @@ const PLATFORMS = {
 let currentSettings = {
   hourlyWage: 500, // Default for demo: 500 INR/hr
   isFrictionEnabled: true,
-  coolingOffPeriod: 60, 
+  coolingOffPeriod: 20, 
   antiFomoEnabled: true,
   currentGoal: "Financial Freedom",
   goalTarget: 10000,
