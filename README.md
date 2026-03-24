@@ -9,6 +9,8 @@ ZenSpend is a Chrome Extension designed to introduce **intentional friction** in
 - **Life-Hour Calculator**: Translates product costs into hours of manual labor based on your custom hourly wage.
 - **AI-Driven Reflections**: Displays dynamic, context-aware mindfulness prompts based on the price of the item.
 - **Impulse Detection Sensor (Audible Alarm)**: Automatically plays a pulsed siren/beep when browsing is too hectic, clicking too fast, or shopping mindlessly.
+- **Cart Alarm Sensor**: Detects when you enter a `/cart` or `/checkout` page and triggers a verbal/audible alert to ensure you're intentional about finalizing your purchase.
+- **Life-Hour Worth Insight**: Real-time visualization of your "Hourly Life Value" in the popup to contextualize every potential spend.
 - **Premium Aesthetics**: Features a modern, dark-mode design with glassmorphism and smooth animations.
 
 ## 🚀 How to Install & Use
