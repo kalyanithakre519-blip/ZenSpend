@@ -88,11 +88,12 @@ const speak = (text) => {
 /**
  * Literal Beep Sound (Bajna)
  */
-const playBeep = (freq = 440, duration = 0.2, volume = 0.1) => {
+const playBeep = (freq = 440, duration = 0.2, volume = 0.5) => {
     try {
         if (!audioCtx) initAudio();
         if (audioCtx.state === 'suspended') {
-            console.warn("Audio Context is suspended. Need user click.");
+            audioCtx.resume().catch(e => console.error("Resume failed:", e));
+            console.warn("Audio Context is suspended. Please click anywhere on the page to enable sensor sound.");
             return;
         }
 
@@ -102,13 +103,16 @@ const playBeep = (freq = 440, duration = 0.2, volume = 0.1) => {
         oscillator.connect(gainNode);
         gainNode.connect(audioCtx.destination);
 
-        oscillator.type = 'sine';
+        // 'square' oscillator is much more 'alarm-like' than 'sine'
+        oscillator.type = 'square'; 
         oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        
         gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
 
         oscillator.start();
         oscillator.stop(audioCtx.currentTime + duration);
+        console.log(`[Sensor] Beep played at ${freq}Hz`);
     } catch (e) {
         console.error("Audio error:", e);
     }
@@ -118,10 +122,11 @@ const playBeep = (freq = 440, duration = 0.2, volume = 0.1) => {
  * Pulsed Siren Alarm (Intensity Sensor)
  */
 const playAlarm = (repeats = 3) => {
+    console.log("[Sensor] Alarm Triggered!");
     let count = 0;
     const interval = setInterval(() => {
-        // Alternating high/low like a real sensor/alarm
-        playBeep(count % 2 === 0 ? 980 : 660, 0.15, 0.15);
+        // Harsh buzzer sound (Square wave at alternating frequencies)
+        playBeep(count % 2 === 0 ? 800 : 500, 0.15, 0.4);
         count++;
         if (count >= repeats * 2) clearInterval(interval);
     }, 200);
@@ -167,16 +172,32 @@ const injectStatusBadge = () => {
         font-family: sans-serif; pointer-events: none; border: 1px solid white;
         box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold;
     `;
-    badge.innerText = "ZenSpend: Ready 🧘 (Click any button)";
+    badge.innerText = "ZenSpend Sensor: Click to Wake 😴";
     document.body.appendChild(badge);
-    setTimeout(() => { badge.style.opacity = '0.4'; }, 5000);
+    
+    // Auto-dim after 10s
+    setTimeout(() => { badge.style.opacity = '0.6'; }, 10000);
 
-    // Update badge on click to show audio is active
-    window.addEventListener('mousedown', () => {
-        badge.innerText = "ZenSpend: Audio Active 🔉";
-        badge.style.background = 'rgba(34, 197, 94, 0.9)'; // Green
-        setTimeout(() => { badge.innerText = "ZenSpend: Mindful Mode 🧠"; }, 2000);
-    }, { once: true });
+    // Audio Activation handler
+    const activateAudio = () => {
+        initAudio();
+        badge.innerText = "ZenSpend Sensor: ACTIVE 🚨";
+        badge.style.background = 'rgba(239, 68, 68, 0.9)'; // Red alert
+        badge.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.8)';
+        playAlarm(1); // Short test beep to confirm it's working
+        
+        setTimeout(() => { 
+            badge.innerText = "ZenSpend: Mindful Mode 🧠"; 
+            badge.style.background = 'rgba(34, 197, 94, 0.9)'; // Green
+            badge.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3)';
+        }, 2000);
+        
+        window.removeEventListener('mousedown', activateAudio);
+        window.removeEventListener('keydown', activateAudio);
+    };
+
+    window.addEventListener('mousedown', activateAudio);
+    window.addEventListener('keydown', activateAudio);
 };
 
 /**
