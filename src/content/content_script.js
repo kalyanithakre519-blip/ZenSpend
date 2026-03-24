@@ -314,22 +314,35 @@ const startBehavioralTracking = () => {
     window.addEventListener('scroll', () => {
         const currentTime = Date.now();
         const currentScrollY = window.scrollY;
+        
+        // Reset tracking if user hasn't scrolled in a while to avoid huge timeDiff
+        if (currentTime - lastScrollTime > 300) {
+            lastScrollTime = currentTime;
+            lastScrollY = currentScrollY;
+            return;
+        }
+
         const timeDiff = currentTime - lastScrollTime;
         const distDiff = Math.abs(currentScrollY - lastScrollY);
         
         if (timeDiff > 0) {
             const speed = distDiff / timeDiff;
             scrollSpeeds.push(speed);
-            if (scrollSpeeds.length > 20) scrollSpeeds.shift();
+            if (scrollSpeeds.length > 10) scrollSpeeds.shift(); // Smaller window for faster response
             
             const avgSpeed = scrollSpeeds.reduce((a, b) => a + b, 0) / scrollSpeeds.length;
-            if (avgSpeed > 12) { // More sensitive threshold (was 15)
+            
+            // Log speed for debugging
+            if (avgSpeed > 1) console.log(`[Sensor] Current Scroll Speed: ${avgSpeed.toFixed(2)}`);
+
+            if (avgSpeed > 4) { // Lower threshold (Hyper-sensitive)
                 if (!isImpulseBehaviorDetected) {
+                    console.log("[Sensor] Hectic Browsing Detected!");
                     updateImpulseBadge(true);
                 } else {
-                    // Constant beep while scrolling
-                    if (currentTime - lastScrollBeepTime > 600) { 
-                        playBeep(1100, 0.25, 0.2); // Intense beep for continuous scrolling (Louder)
+                    // Continuous beeping while scrolling fast
+                    if (currentTime - lastScrollBeepTime > 250) { // Faster beeps
+                        playBeep(1200, 0.2, 0.4); 
                         lastScrollBeepTime = currentTime;
                     }
                 }
