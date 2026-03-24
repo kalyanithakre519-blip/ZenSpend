@@ -27,6 +27,13 @@ The overlay is built with:
 - A CSS-based timer bar that visually counts down the required friction period.
 - High-level "AI Analysis" tier logic that changes messaging based on spending amount.
 
+### D. Behavioral Impulse Sensor (`The Ringing Sensor`)
+ZenSpend includes an "Audible Impulse Sensor" that:
+- Monitors `scroll speed` (Hectic browsing).
+- Tracks `click frequency` (Rapid Clicking/Panic buying).
+- Measures `Time on Page` (Mindless jumping).
+- Triggers a **pulsed alarm (siren sound)** and **visual vibration** to snap the user out of an impulsive state.
+
 ## 4. Key Logic (The Algorithm)
 ```javascript
 const getAIReflection = (price) => {
