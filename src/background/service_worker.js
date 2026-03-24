@@ -23,10 +23,20 @@ chrome.runtime.onInstalled.addListener(() => {
 // Listener for messages from content or popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'REFLECT') {
-    // Potentially use an AI API here to generate reflection?
-    // For now, return a generic mindfulness prompt
     sendResponse({ 
       reflection: "Take a deep breath. Is this a want or a need?" 
     });
+  }
+
+  if (request.type === 'GET_TAB_COUNT') {
+    chrome.tabs.query({}, (tabs) => {
+      const shoppingKeywords = ['amazon', 'flipkart', 'shopify', 'walmart', 'target', 'ebay', 'aliexpress', 'myntra', 'ajio'];
+      const shoppingTabs = tabs.filter(tab => {
+        const url = tab.url ? tab.url.toLowerCase() : '';
+        return shoppingKeywords.some(keyword => url.includes(keyword));
+      });
+      sendResponse({ count: shoppingTabs.length });
+    });
+    return true; // Keep message channel open for async response
   }
 });

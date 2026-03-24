@@ -8,6 +8,7 @@ ZenSpend is a Chrome Extension designed to introduce **intentional friction** in
 - **Cooling-Off Period**: Injects a mandatory 60-second "Mindful Pause" before a purchase can be finalized.
 - **Life-Hour Calculator**: Translates product costs into hours of manual labor based on your custom hourly wage.
 - **AI-Driven Reflections**: Displays dynamic, context-aware mindfulness prompts based on the price of the item.
+- **Impulse Detection Sensor (Audible Alarm)**: Automatically plays a pulsed siren/beep when browsing is too hectic, clicking too fast, or shopping mindlessly.
 - **Premium Aesthetics**: Features a modern, dark-mode design with glassmorphism and smooth animations.
 
 ## 🚀 How to Install & Use

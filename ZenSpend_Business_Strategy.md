@@ -10,6 +10,8 @@ ZenSpend utilizes a "Privacy-First" local environment that combines high-perform
 | **Architecture** | Chrome Manifest V3 | Standardized security and long-term support. |
 | **API** | Chrome Storage, Scripting | Persistent goal tracking and script injection. |
 | **Monitoring** | MutationObserver API | Real-time discovery of dynamic 'Buy' buttons. |
+| **Sensors** | AI Behavioral Heuristics | Rapid-click, Decision-speed, and Tab-overload detection. |
+| **Audio** | SpeechSynthesis API | Real-time audio coaching and voice alerts. |
 
 ## 2. Why it’s Highly Useful (The Pain Point)
 The current "One-Click Execution" economy relies on **Impulse Decisions**. ZenSpend is useful because:
