@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZenSpend</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --accent: #22c55e;
+      --primary: #6366f1;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    body {
+      width: 380px;
+      height: 500px;
+      margin: 0;
+      padding: 20px;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      height: 100%;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+    }
+
+    .logo-text {
+      font-weight: 600;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-group label {
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .currency-symbol {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 12px 12px 12px 32px;
+      color: white;
+      font-family: inherit;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: all 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    .ai-reflection {
+      font-style: italic;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .save-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary), #4f46e5);
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .save-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+    }
+
+    .save-btn:active {    .progress-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      margin-top: 8px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(-- primary), var(--accent));
+      border-radius: 3px;
+      transition: width 1s ease-out;
+    }
+      transform: translateY(0);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: rgba(34, 197, 94, 0.1);
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .mode-switch {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--card-bg);
+      transition: .4s;
+      border-radius: 34px;
+      border: 1px solid var(--glass-border);
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--accent);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">
+        <img src="../assets/zenspend_logo.png" alt="ZenSpend Logo" class="logo-img">
+        <span class="logo-text">ZenSpend</span>
+      </div>
+      <div class="badge">AI Engine Active</div>
+    </div>
+
+    <div class="card stat-grid">
+      <div>
+        <div class="stat-label">Hours Saved</div>
+        <div class="stat-value" id="hours-saved">12.4</div>
+      </div>
+      <div>
+        <div class="stat-label">Money Avoided</div>
+        <div class="stat-value" id="money-saved">$1,240</div>
+      </div>
+    </div>
+
+    <div class="card input-group">
+      <label>Your Hourly Worth</label>
+      <div class="input-wrapper">
+        <span class="currency-symbol">$</span>
+        <input type="number" id="hourly-wage" placeholder="45" value="45">
+      </div>
+      <div class="ai-reflection" id="reflection-text">
+        "Your time is your most finite currency. Spend it wisely."
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="mode-switch">
+        <span>Intentional Friction</span>
+        <label class="switch">
+          <input type="checkbox" id="friction-toggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="mode-switch" style="margin-top: 16px;">
+        <span>Anti-FOMO Shield</span>
+        <label class="switch">
+          <input type="checkbox" id="fomo-toggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="card input-group">
+      <label>Your Major Goal</label>
+      <div class="input-wrapper">
+        <input type="text" id="current-goal" placeholder="E.g. Travel to Japan" value="Financial Freedom">
+      </div>
+      <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+        AI will prompt you with this goal during purchases.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="stat-label">Goal Mastery Tracker</div>
+      <div class="progress-container">
+        <div class="progress-bar" id="goal-bar" style="width: 25%;"></div>
+      </div>
+      <p id="goal-summary" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">
+        You've saved 25% of your impulse budget.
+      </p>
+    </div>
+
+    <button class="save-btn" id="save-settings">Save All Preferences</button>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

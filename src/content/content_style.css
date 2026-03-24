@@ -1,0 +1,153 @@
+/* ZenSpend Content Injection Style */
+.zenspend-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(10, 12, 16, 0.95);
+  backdrop-filter: blur(20px);
+  z-index: 2147483647; /* Highest possible */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Outfit', sans-serif, system-ui, -apple-system;
+  color: #f8fafc;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.zenspend-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.zenspend-card {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  transform: translateY(20px);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.zenspend-overlay.active .zenspend-card {
+  transform: translateY(0);
+}
+
+.zenspend-icon {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border-radius: 16px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+}
+
+.zenspend-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.zenspend-subtitle {
+  color: #94a3b8;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.zenspend-price-insight {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 32px;
+  padding: 24px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 16px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.zenspend-stat-label {
+  color: #818cf8;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.zenspend-stat-value {
+  font-size: 2.5rem;
+  font-weight: 600;
+}
+
+.zenspend-timer-container {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+
+.zenspend-timer-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: #22c55e;
+  width: 100%;
+  transition: width 1s linear;
+}
+
+.zenspend-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.zenspend-btn {
+  flex: 1;
+  padding: 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  font-size: 1rem;
+}
+
+.zenspend-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+.zenspend-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.zenspend-btn-primary {
+  background: #6366f1;
+  color: white;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.zenspend-btn-primary.ready {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.zenspend-btn-primary.ready:hover {
+  background: #4f46e5;
+  transform: translateY(-2px);
+}

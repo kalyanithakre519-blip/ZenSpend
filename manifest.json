@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "ZenSpend: AI-Driven Mindfulness Tool",
+  "version": "1.0.0",
+  "description": "Introduces intentional friction to discourage impulse spending on e-commerce platforms.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": [
+    "*://*.amazon.com/*",
+    "*://*.amazon.in/*",
+    "*://*.shopify.com/*",
+    "*://*.walmart.com/*",
+    "*://*.target.com/*"
+  ],
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_icon": {
+      "16": "src/assets/zenspend_logo.png",
+      "48": "src/assets/zenspend_logo.png",
+      "128": "src/assets/zenspend_logo.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.amazon.com/*",
+        "*://*.amazon.in/*",
+        "*://*.shopify.com/*",
+        "*://*.walmart.com/*",
+        "*://*.target.com/*"
+      ],
+      "js": ["src/content/content_script.js"],
+      "css": ["src/content/content_style.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "src/background/service_worker.js"
+  },
+  "icons": {
+    "16": "src/assets/zenspend_logo.png",
+    "48": "src/assets/zenspend_logo.png",
+    "128": "src/assets/zenspend_logo.png"
+  }
+}
