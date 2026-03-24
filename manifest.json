@@ -3,7 +3,7 @@
   "name": "ZenSpend: AI-Driven Mindfulness Tool",
   "version": "1.0.0",
   "description": "Introduces intentional friction to discourage impulse spending on e-commerce platforms.",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
   "host_permissions": [
     "*://*.amazon.com/*",
     "*://*.amazon.in/*",

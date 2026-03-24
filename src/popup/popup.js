@@ -10,6 +10,7 @@ const reflections = [
 document.addEventListener('DOMContentLoaded', () => {
   const frictionToggle = document.getElementById('friction-toggle');
   const fomoToggle = document.getElementById('fomo-toggle');
+  const sensorToggle = document.getElementById('sensor-toggle');
   const saveBtn = document.getElementById('save-settings');
   const reflectionText = document.getElementById('reflection-text');
   const hoursSavedEl = document.getElementById('hours-saved');
@@ -17,19 +18,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const goalBar = document.getElementById('goal-bar');
   const currentGoalInput = document.getElementById('current-goal');
   const goalSummary = document.getElementById('goal-summary');
+  const hourlyWageInput = document.getElementById('hourly-wage');
 
   // Load settings
-  chrome.storage.local.get(['hourlyWage', 'isFrictionEnabled', 'hoursSaved', 'moneySaved', 'isFomoEnabled', 'currentGoal'], (data) => {
-    if (data.hourlyWage) hourlyWageInput.value = data.hourlyWage;
+  chrome.storage.local.get(['hourlyWage', 'isFrictionEnabled', 'hoursSaved', 'moneySaved', 'isFomoEnabled', 'currentGoal', 'isSensorEnabled'], (data) => {
+    const hourlyWage = data.hourlyWage || 500;
+    hourlyWageInput.value = hourlyWage;
+    
     if (data.isFrictionEnabled !== undefined) frictionToggle.checked = data.isFrictionEnabled;
     if (data.isFomoEnabled !== undefined) fomoToggle.checked = data.isFomoEnabled;
+    if (data.isSensorEnabled !== undefined) sensorToggle.checked = data.isSensorEnabled;
     if (data.currentGoal) currentGoalInput.value = data.currentGoal;
     
     const hSaved = data.hoursSaved || 0;
     const mSaved = data.moneySaved || 0;
     
     hoursSavedEl.textContent = hSaved.toFixed(1);
-    moneySavedEl.textContent = `$${mSaved.toLocaleString()}`;
+    moneySavedEl.textContent = `₹${mSaved.toLocaleString()}`;
+
+    // Update the nuevo life-hour worth section
+    const currentWorthEl = document.getElementById('current-worth');
+    const worthInsightEl = document.getElementById('worth-insight');
+    if (currentWorthEl) currentWorthEl.textContent = `₹${hourlyWage}`;
+    if (worthInsightEl) worthInsightEl.textContent = `Every hour of your life is worth ₹${hourlyWage}. This is what we use to calculate the "Life-Hour Cost" of your purchases.`;
     
     // Percentage logic
     const score = Math.min((hSaved * 10), 100);
@@ -42,14 +53,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const hourlyWage = parseFloat(hourlyWageInput.value);
     const isFrictionEnabled = frictionToggle.checked;
     const isFomoEnabled = fomoToggle.checked;
+    const isSensorEnabled = sensorToggle.checked;
     const currentGoal = currentGoalInput.value;
 
     chrome.storage.local.set({ 
       hourlyWage, 
       isFrictionEnabled,
       isFomoEnabled,
+      isSensorEnabled,
       currentGoal
     }, () => {
+      // Refresh UI values immediately
+      const currentWorthEl = document.getElementById('current-worth');
+      const worthInsightEl = document.getElementById('worth-insight');
+      if (currentWorthEl) currentWorthEl.textContent = `₹${hourlyWage}`;
+      if (worthInsightEl) worthInsightEl.textContent = `Every hour of your life is worth ₹${hourlyWage}. This is what we use to calculate the "Life-Hour Cost" of your purchases.`;
+
       saveBtn.innerText = 'Settings Saved!';
       saveBtn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
       

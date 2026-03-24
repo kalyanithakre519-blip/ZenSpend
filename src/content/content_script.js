@@ -37,7 +37,8 @@ let currentSettings = {
   antiFomoEnabled: true,
   currentGoal: "Financial Freedom",
   goalTarget: 10000,
-  currency: '₹' 
+  currency: '₹',
+  isSensorEnabled: true
 };
 
 // State
@@ -140,12 +141,13 @@ chrome.storage.local.get(['hourlyWage', 'isFrictionEnabled', 'currentGoal', 'goa
   if (data.isFrictionEnabled !== undefined) currentSettings.isFrictionEnabled = data.isFrictionEnabled;
   if (data.currentGoal) currentSettings.currentGoal = data.currentGoal;
   if (data.goalTarget) currentSettings.goalTarget = data.goalTarget;
+  if (data.isSensorEnabled !== undefined) currentSettings.isSensorEnabled = data.isSensorEnabled;
   
   if (document.body.innerText.includes('₹')) currentSettings.currency = '₹';
   else if (document.body.innerText.includes('$')) currentSettings.currency = '$';
   
-  console.log('ZenSpend initialized:', currentSettings);
-  injectStatusBadge();
+  console.log('ZenSpend storage settings loaded:', currentSettings);
+  updateStatusBadgeUI(); 
   
   // Tab Overload Sensor: Check tab count on start
   chrome.runtime.sendMessage({ type: 'GET_TAB_COUNT' }, (response) => {
@@ -158,6 +160,27 @@ chrome.storage.local.get(['hourlyWage', 'isFrictionEnabled', 'currentGoal', 'goa
   });
 });
 
+// Update settings when changed in popup
+chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'local') {
+        if (changes.isSensorEnabled) {
+            currentSettings.isSensorEnabled = changes.isSensorEnabled.newValue;
+            updateStatusBadgeUI();
+        }
+        if (changes.hourlyWage) currentSettings.hourlyWage = changes.hourlyWage.newValue;
+        if (changes.isFrictionEnabled) currentSettings.isFrictionEnabled = changes.isFrictionEnabled.newValue;
+        if (changes.currentGoal) currentSettings.currentGoal = changes.currentGoal.newValue;
+    }
+});
+
+const updateStatusBadgeUI = () => {
+    const badge = document.getElementById('zenspend-status-badge');
+    if (!badge) return;
+    badge.innerText = `ZenSpend Sensor: ${currentSettings.isSensorEnabled ? 'ON 🔊' : 'OFF 🔇'}`; 
+    badge.style.background = currentSettings.isSensorEnabled ? 'rgba(34, 197, 94, 0.9)' : 'rgba(100, 116, 139, 0.9)'; 
+    badge.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3)';
+};
+
 /**
  * Inject Status Badge to confirm it's running
  */
@@ -168,32 +191,32 @@ const injectStatusBadge = () => {
     badge.style.cssText = `
         position: fixed; top: 10px; right: 10px; z-index: 999999;
         background: rgba(99, 102, 241, 0.9); color: white;
-        padding: 5px 12px; border-radius: 20px; font-size: 10px;
-        font-family: sans-serif; pointer-events: none; border: 1px solid white;
+        padding: 8px 15px; border-radius: 20px; font-size: 11px;
+        font-family: sans-serif; cursor: pointer; border: 2px solid white;
         box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     `;
-    badge.innerText = "ZenSpend Sensor: Click to Wake 😴";
+    badge.innerText = `ZenSpend Sensor: ${currentSettings.isSensorEnabled ? 'ON 🔊' : 'OFF 🔇'}`;
     document.body.appendChild(badge);
+
+    // Toggle Sensor 
+    badge.addEventListener('click', (e) => {
+        initAudio();
+        currentSettings.isSensorEnabled = !currentSettings.isSensorEnabled;
+        chrome.storage.local.set({ isSensorEnabled: currentSettings.isSensorEnabled });
+        updateStatusBadgeUI();
+        if (currentSettings.isSensorEnabled) {
+            playAlarm(1);
+        }
+        e.stopPropagation();
+    });
     
     // Auto-dim after 10s
     setTimeout(() => { badge.style.opacity = '0.6'; }, 10000);
 
-    // Audio Activation handler
+    // Audio Activation handler (removed wake text, integrated into toggle)
     const activateAudio = () => {
         initAudio();
-        badge.innerText = "ZenSpend Sensor: ACTIVE 🚨";
-        badge.style.background = 'rgba(239, 68, 68, 0.9)'; // Red alert
-        badge.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.8)';
-        playAlarm(1); // Short test beep to confirm it's working
-        
-        setTimeout(() => { 
-            badge.innerText = "ZenSpend: Mindful Mode 🧠"; 
-            badge.style.background = 'rgba(34, 197, 94, 0.9)'; // Green
-            badge.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3)';
-        }, 2000);
-        
-        window.removeEventListener('mousedown', activateAudio);
-        window.removeEventListener('keydown', activateAudio);
     };
 
     window.addEventListener('mousedown', activateAudio);
@@ -315,6 +338,12 @@ const startBehavioralTracking = () => {
         const currentTime = Date.now();
         const currentScrollY = window.scrollY;
         
+        // Every-time beep on scroll if sensor is on
+        if (currentSettings.isSensorEnabled && currentTime - lastScrollBeepTime > 150) {
+            playBeep(300, 0.05, 0.1); // Subtle tick sound
+            lastScrollBeepTime = currentTime;
+        }
+
         // Reset tracking if user hasn't scrolled in a while to avoid huge timeDiff
         if (currentTime - lastScrollTime > 300) {
             lastScrollTime = currentTime;
@@ -328,20 +357,15 @@ const startBehavioralTracking = () => {
         if (timeDiff > 0) {
             const speed = distDiff / timeDiff;
             scrollSpeeds.push(speed);
-            if (scrollSpeeds.length > 10) scrollSpeeds.shift(); // Smaller window for faster response
+            if (scrollSpeeds.length > 10) scrollSpeeds.shift(); 
             
             const avgSpeed = scrollSpeeds.reduce((a, b) => a + b, 0) / scrollSpeeds.length;
             
-            // Log speed for debugging
-            if (avgSpeed > 1) console.log(`[Sensor] Current Scroll Speed: ${avgSpeed.toFixed(2)}`);
-
-            if (avgSpeed > 4) { // Lower threshold (Hyper-sensitive)
+            if (avgSpeed > 4) { 
                 if (!isImpulseBehaviorDetected) {
-                    console.log("[Sensor] Hectic Browsing Detected!");
                     updateImpulseBadge(true);
                 } else {
-                    // Continuous beeping while scrolling fast
-                    if (currentTime - lastScrollBeepTime > 250) { // Faster beeps
+                    if (currentTime - lastScrollBeepTime > 250) { 
                         playBeep(1200, 0.2, 0.4); 
                         lastScrollBeepTime = currentTime;
                     }
@@ -354,6 +378,13 @@ const startBehavioralTracking = () => {
         lastScrollY = currentScrollY;
         lastScrollTime = currentTime;
     }, { passive: true });
+
+    // Every-time beep on clicks if sensor is on
+    window.addEventListener('mousedown', () => {
+        if (currentSettings.isSensorEnabled) {
+            playBeep(200, 0.05, 0.15); // Subtle click feedback
+        }
+    }, true);
 };
 
 /**
@@ -404,8 +435,20 @@ const createOverlay = (lifeHours, price, platformName) => {
   document.body.appendChild(overlay);
 
   document.getElementById('zenspend-cancel').addEventListener('click', () => {
-    hideOverlay();
-    window.history.back();
+    // Save stats before hiding overlay
+    chrome.storage.local.get(['hoursSaved', 'moneySaved'], (data) => {
+        const hSaved = (data.hoursSaved || 0) + parseFloat(lifeHours);
+        const mSaved = (data.moneySaved || 0) + parseFloat(price);
+        
+        chrome.storage.local.set({ 
+            hoursSaved: hSaved, 
+            moneySaved: mSaved 
+        }, () => {
+            console.log(`[ZenSpend] Saved: $${price} and ${lifeHours} hours!`);
+            hideOverlay();
+            window.history.back();
+        });
+    });
   });
 
   document.getElementById('zenspend-proceed').addEventListener('click', () => {
@@ -520,8 +563,34 @@ const initObserver = () => {
   injectLifeHourTags();
 };
 
-// Start
+/**
+ * Cart Alarm Sensor
+ */
+const checkCartSensor = () => {
+    const url = window.location.href.toLowerCase();
+    const isCart = url.includes('/cart') || 
+                  url.includes('/checkout') || 
+                  url.includes('/basket') || 
+                  url.includes('gp/cart/view.html');
+                  
+    if (isCart && currentSettings.isSensorEnabled) {
+        console.log("[Sensor] Cart detected! Triggering alarm.");
+        // Short delay to ensure audio context is ready (if was interaction before)
+        setTimeout(() => {
+            playAlarm(5); // Intense alarm for cart
+            speak("Zen Spend Alert! You are about to spend money. Are you sure you need these items? Think of your goal: " + currentSettings.currentGoal);
+        }, 1000);
+    }
+};
+
+// Start everything
+console.log('ZenSpend: Content script loaded and initializing...');
+injectStatusBadge(); // Inject immediately so user sees it
+
 setTimeout(() => {
     initObserver();
     startBehavioralTracking();
+    checkCartSensor();
+    console.log('ZenSpend: Observer, behavioral tracking, and cart sensor started.');
 }, 500);
+

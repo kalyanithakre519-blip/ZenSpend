@@ -156,7 +156,11 @@
       box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
     }
 
-    .save-btn:active {    .progress-container {
+    .save-btn:active {
+      transform: translateY(0);
+    }
+
+    .progress-container {
       width: 100%;
       height: 6px;
       background: rgba(255, 255, 255, 0.1);
@@ -166,11 +170,9 @@
 
     .progress-bar {
       height: 100%;
-      background: linear-gradient(90deg, var(-- primary), var(--accent));
+      background: linear-gradient(90deg, var(--primary), var(--accent));
       border-radius: 3px;
       transition: width 1s ease-out;
-    }
-      transform: translateY(0);
     }
 
     .badge {
@@ -251,12 +253,24 @@
     <div class="card stat-grid">
       <div>
         <div class="stat-label">Hours Saved</div>
-        <div class="stat-value" id="hours-saved">12.4</div>
+        <div class="stat-value" id="hours-saved">0.0</div>
       </div>
       <div>
         <div class="stat-label">Money Avoided</div>
-        <div class="stat-value" id="money-saved">$1,240</div>
+        <div class="stat-value" id="money-saved">₹0</div>
       </div>
+    </div>
+
+    <!-- Added Life-Hour Worth Insight -->
+    <div class="card" style="border-left: 4px solid var(--accent);">
+      <div class="stat-label">Current Life-Hour Worth</div>
+      <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px;">
+        <div class="stat-value" id="current-worth">₹500</div>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">per working hour</span>
+      </div>
+      <p id="worth-insight" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 10px;">
+        Every hour of your life is worth ₹500. This is what we use to calculate the "Life-Hour Cost" of your purchases.
+      </p>
     </div>
 
     <div class="card input-group">
@@ -282,6 +296,13 @@
         <span>Anti-FOMO Shield</span>
         <label class="switch">
           <input type="checkbox" id="fomo-toggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="mode-switch" style="margin-top: 16px;">
+        <span>Pulse Sensor Beep 🔊</span>
+        <label class="switch">
+          <input type="checkbox" id="sensor-toggle" checked>
           <span class="slider"></span>
         </label>
       </div>
