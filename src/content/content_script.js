@@ -18,6 +18,16 @@ const PLATFORMS = {
     priceSelector: '#corePrice_feature_div .a-offscreen, #priceblock_ourprice, #priceblock_dealprice, .a-price-whole, #sc-subtotal-amount-buybox, #sw-subtotal span.a-offscreen, .a-size-medium.a-color-price, .p13n-sc-price',
     name: 'Amazon'
   },
+  FLIPKART: {
+    selectors: ['button._2KpZ6l._2U9u47', 'button._2KpZ6l._20-oIs', 'button._2KpZ6l._3A76ob'],
+    priceSelector: '._30jeq3._16J_qT, ._25b6yL',
+    name: 'Flipkart'
+  },
+  MYNTRA: {
+    selectors: ['.pdp-add-to-bag', '.pdp-buy-now'],
+    priceSelector: '.pdp-price strong, .pdp-discount',
+    name: 'Myntra'
+  },
   SHOPIFY: {
     selectors: ['button[name="add"]', 'button[type="submit"][class*="product-form"]', '.shopify-payment-button'],
     priceSelector: '[data-price], .price-item--regular',
@@ -27,6 +37,21 @@ const PLATFORMS = {
     selectors: ['button[data-automation-id="add-to-cart"]', 'button[aria-label="Add to cart"]'],
     priceSelector: '[data-automation-id="item-price"] .w_iB',
     name: 'Walmart'
+  },
+  TARGET: {
+    selectors: ['button[data-test="orderPickupButton"]', 'button[data-test="shipItButton"]', 'button[aria-label*="Add to cart"]'],
+    priceSelector: '[data-test="product-price"]',
+    name: 'Target'
+  },
+  AJIO: {
+    selectors: ['.pdp-addtocart-button', '.pdp-buy-now-button'],
+    priceSelector: '.pdp-price, .pdp-mrp',
+    name: 'Ajio'
+  },
+  NYKAA: {
+    selectors: ['button[aria-label="Add to Bag"]', 'button[aria-label="Buy Now"]'],
+    priceSelector: '.css-1jczs19, .css-18v29j6',
+    name: 'Nykaa'
   }
 };
 
@@ -38,7 +63,9 @@ let currentSettings = {
   currentGoal: "Financial Freedom",
   goalTarget: 10000,
   currency: '₹',
-  isSensorEnabled: true
+  isSensorEnabled: true,
+  isDevMode: true, // Keep "Developer Mode" on for enhanced monitoring
+  volume: 100
 };
 
 // State
@@ -79,11 +106,13 @@ window.addEventListener('keydown', initAudio, { once: true });
 /**
  * Audio Alert (Voice Response)
  */
-const speak = (text) => {
+const speak = (text, lang = 'hi-IN') => {
     const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang; // Set to Hindi
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
     window.speechSynthesis.speak(utterance);
+    console.log(`[Sensor] AI Voice: "${text}"`);
 };
 
 /**
@@ -91,10 +120,18 @@ const speak = (text) => {
  */
 const playBeep = (freq = 440, duration = 0.2, volume = 0.5) => {
     try {
-        if (!audioCtx) initAudio();
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume().catch(e => console.error("Resume failed:", e));
-            console.warn("Audio Context is suspended. Please click anywhere on the page to enable sensor sound.");
+        if (!audioCtx) {
+            console.warn("[Sensor] Audio Context not initialized. Trying to init...");
+            initAudio();
+        }
+        
+        if (audioCtx && audioCtx.state === 'suspended') {
+            console.warn("[Sensor] Audio Context is suspended. Attemping AUTO-RESUME...");
+            audioCtx.resume();
+        }
+        
+        if (audioCtx && audioCtx.state !== 'running') {
+            console.error("[Sensor] Audio Context NOT running. USER INTERACTION REQUIRED.");
             return;
         }
 
@@ -108,7 +145,8 @@ const playBeep = (freq = 440, duration = 0.2, volume = 0.5) => {
         oscillator.type = 'square'; 
         oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
         
-        gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+        const finalVolume = (volume * (currentSettings.volume / 100));
+        gainNode.gain.setValueAtTime(finalVolume, audioCtx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
 
         oscillator.start();
@@ -122,26 +160,57 @@ const playBeep = (freq = 440, duration = 0.2, volume = 0.5) => {
 /**
  * Pulsed Siren Alarm (Intensity Sensor)
  */
-const playAlarm = (repeats = 3) => {
-    console.log("[Sensor] Alarm Triggered!");
+const playAlarm = (repeats = 5) => {
+    console.log(`[Sensor] Intensive Alarm Triggered! repeats: ${repeats}`);
+    if (!currentSettings.isSensorEnabled) return;
+    
+    // Fallback if audio suspended
+    if (audioCtx && audioCtx.state === 'suspended') {
+        showAudioWakePrompt();
+    }
+    
     let count = 0;
     const interval = setInterval(() => {
-        // Harsh buzzer sound (Square wave at alternating frequencies)
-        playBeep(count % 2 === 0 ? 800 : 500, 0.15, 0.4);
+        playBeep(count % 2 === 0 ? 1200 : 400, 0.1, 0.8);
         count++;
         if (count >= repeats * 2) clearInterval(interval);
-    }, 200);
+    }, 150);
+};
+
+const showAudioWakePrompt = () => {
+    if (document.getElementById('zenspend-wake-prompt')) return;
+    const prompt = document.createElement('div');
+    prompt.id = 'zenspend-wake-prompt';
+    prompt.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.8); z-index: 2147483647; 
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        color: white; font-family: sans-serif; cursor: pointer;
+    `;
+    prompt.innerHTML = `
+        <div style="font-size: 50px;">🔔</div>
+        <h1 style="color: #ef4444;">AI Sensor Blocked!</h1>
+        <p style="font-size: 20px;">Please <b>CLICK ANYWHERE</b> to unlock the Alarm Sensor.</p>
+    `;
+    prompt.onclick = () => {
+        initAudio();
+        prompt.remove();
+        playAlarm(1);
+    };
+    document.body.appendChild(prompt);
 };
 
 /**
  * Initialize Settings
  */
-chrome.storage.local.get(['hourlyWage', 'isFrictionEnabled', 'currentGoal', 'goalTarget'], (data) => {
+chrome.storage.local.get(['hourlyWage', 'isFrictionEnabled', 'currentGoal', 'goalTarget', 'isSensorEnabled', 'isDevMode', 'volume'], (data) => {
   if (data.hourlyWage) currentSettings.hourlyWage = data.hourlyWage;
   if (data.isFrictionEnabled !== undefined) currentSettings.isFrictionEnabled = data.isFrictionEnabled;
   if (data.currentGoal) currentSettings.currentGoal = data.currentGoal;
   if (data.goalTarget) currentSettings.goalTarget = data.goalTarget;
   if (data.isSensorEnabled !== undefined) currentSettings.isSensorEnabled = data.isSensorEnabled;
+  if (data.isDevMode !== undefined) currentSettings.isDevMode = data.isDevMode;
+  if (data.volume !== undefined) currentSettings.volume = data.volume;
   
   if (document.body.innerText.includes('₹')) currentSettings.currency = '₹';
   else if (document.body.innerText.includes('$')) currentSettings.currency = '$';
@@ -176,9 +245,9 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 const updateStatusBadgeUI = () => {
     const badge = document.getElementById('zenspend-status-badge');
     if (!badge) return;
-    badge.innerText = `ZenSpend Sensor: ${currentSettings.isSensorEnabled ? 'ON 🔊' : 'OFF 🔇'}`; 
-    badge.style.background = currentSettings.isSensorEnabled ? 'rgba(34, 197, 94, 0.9)' : 'rgba(100, 116, 139, 0.9)'; 
-    badge.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3)';
+    badge.innerText = `ZenSpend Sensor: ${currentSettings.isSensorEnabled ? 'ACTIVE 🔊' : 'OFF 🔇'} ${currentSettings.isDevMode ? '[DEV MODE]' : ''}`; 
+    badge.style.background = currentSettings.isSensorEnabled ? 'linear-gradient(135deg, #ef4444, #b91c1c)' : 'rgba(100, 116, 139, 0.9)'; 
+    badge.style.boxShadow = currentSettings.isSensorEnabled ? '0 0 15px rgba(239, 68, 68, 0.6)' : '0 4px 10px rgba(0,0,0,0.3)';
 };
 
 /**
@@ -229,7 +298,12 @@ const injectStatusBadge = () => {
 const getActivePlatform = () => {
   const host = window.location.hostname;
   if (host.includes('amazon')) return PLATFORMS.AMAZON;
+  if (host.includes('flipkart')) return PLATFORMS.FLIPKART;
+  if (host.includes('myntra')) return PLATFORMS.MYNTRA;
   if (host.includes('walmart')) return PLATFORMS.WALMART;
+  if (host.includes('target')) return PLATFORMS.TARGET;
+  if (host.includes('ajio')) return PLATFORMS.AJIO;
+  if (host.includes('nykaa')) return PLATFORMS.NYKAA;
   if (document.querySelector('.shopify-payment-button') || window.Shopify) return PLATFORMS.SHOPIFY;
   return null;
 };
@@ -276,6 +350,16 @@ const calculateLifeHours = (price) => {
   const hourlyWage = currentSettings.hourlyWage || 500;
   const adjustedWage = hourlyWage * 0.7; // Factor in taxes/expenses
   return (price / adjustedWage).toFixed(1);
+};
+
+/**
+ * AI Future Wealth Calculator (Guilt-Trip Sensor)
+ */
+const calculateFutureWealth = (price) => {
+    // Over 10 years, assuming a ~25% compounded growth (High-potential AI/Tech stocks)
+    // 10x return over 10 years for optimal psychological impact
+    const growthFactor = 10;
+    return (price * growthFactor).toLocaleString('en-IN');
 };
 
 /**
@@ -361,12 +445,15 @@ const startBehavioralTracking = () => {
             
             const avgSpeed = scrollSpeeds.reduce((a, b) => a + b, 0) / scrollSpeeds.length;
             
-            if (avgSpeed > 4) { 
+            if (avgSpeed > 3.2) { 
                 if (!isImpulseBehaviorDetected) {
                     updateImpulseBadge(true);
+                    playAlarm(3); 
+                    speak("बहुत तेज़ स्क्रॉल कर रहे हो! थोड़ा धीरे चलो और सोचो!", 'hi-IN'); // Hindi Scroll Warning
+                    console.log("[Sensor] Hectic scroll detected! Speed:", avgSpeed);
                 } else {
-                    if (currentTime - lastScrollBeepTime > 250) { 
-                        playBeep(1200, 0.2, 0.4); 
+                    if (currentTime - lastScrollBeepTime > 150) { 
+                        playBeep(2000, 0.15, 0.7); // Very piercing beep if they keep scrolling fast
                         lastScrollBeepTime = currentTime;
                     }
                 }
@@ -403,6 +490,7 @@ const createOverlay = (lifeHours, price, platformName) => {
   
   const isDecisionTooFast = (Date.now() - pageLoadTime) < 15000;
   const isTabOverload = activeTabCount >= 5;
+  const futureLoss = calculateFutureWealth(price);
 
   overlay.innerHTML = `
     <div class="zenspend-card">
@@ -413,12 +501,18 @@ const createOverlay = (lifeHours, price, platformName) => {
         ${isImpulseBehaviorDetected ? "<span style='color:#f87171'>AI Warning: Hectic browsing detected.</span>" : (isDecisionTooFast ? "<span style='color:#f87171'>AI Sensor: Mindless shopping detected. You didn't even look at the product properly.</span>" : "Your goal: " + currentSettings.currentGoal)}
       </p>
       
+      <div class="zenspend-future-guilt" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 25px; border-left: 5px solid #ef4444;">
+        <div style="font-size: 0.75rem; color: #f87171; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px;">⚠️ FUTURE WEALTH LOSS (AI Projection)</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #ef4444;">${symbol}${futureLoss}</div>
+        <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 5px;">If you invest this money in <b>AI/Tech Stocks</b> today, it could grow to this amount in 10 years. Are you sure this ${platformName} item is worth that?</div>
+      </div>
+
       ${isTabOverload ? `<div style="color: #ef4444; font-size: 0.9rem; margin-top: 10px; font-weight: bold;">⚠️ TAB OVERLOAD: You have ${activeTabCount} shopping tabs open. Stop the madness!</div>` : ''}
       ${fomoWarning ? `<div style="color: #fbbf24; font-size: 0.8rem; margin: 10px 0; border: 1px solid #fbbf24; border-radius: 8px; padding: 5px;">🚨 ${fomoWarning}</div>` : ''}
 
-      <div class="zenspend-price-insight">
+      <div class="zenspend-price-insight" style="margin-bottom: 20px; padding: 15px;">
         <span class="zenspend-stat-label">Life-Hour Cost</span>
-        <span class="zenspend-stat-value">${lifeHours} Hours</span>
+        <span class="zenspend-stat-value" style="font-size: 1.8rem;">${lifeHours} Hours</span>
       </div>
 
       <div class="zenspend-timer-container">
@@ -526,11 +620,11 @@ const interceptAction = (e) => {
       // Continue to overlay anyway to enforce friction
   }
 
-  // --- Decision Speed Sensor (Jaldbaazi Sensor) ---
-  const timeOnPage = (currentTime - pageLoadTime) / 1000;
-  if (timeOnPage < 15) {
-      playAlarm(2); // Fast Decision Sensor Alarm
-      speak("You are shopping too fast! You haven't even looked at the details properly.");
+  // --- Primary Action Sensor (Add to Cart / Buy Now) ---
+  if (currentSettings.isSensorEnabled) {
+      console.log("[Sensor] Major transaction action detected!");
+      playAlarm(8); // Extra long, very intense alarm
+      speak("रुको! क्या तुम्हें सच में इसकी ज़रूरत है? अपने पैसों की बचत करो!", 'hi-IN'); // Hindi Warning
   }
 
   e.preventDefault();

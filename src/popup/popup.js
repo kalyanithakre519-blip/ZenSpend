@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const frictionToggle = document.getElementById('friction-toggle');
   const fomoToggle = document.getElementById('fomo-toggle');
   const sensorToggle = document.getElementById('sensor-toggle');
+  const devModeToggle = document.getElementById('dev-mode-toggle');
+  const volumeSlider = document.getElementById('volume-slider');
+  const testSoundBtn = document.getElementById('test-sound');
   const saveBtn = document.getElementById('save-settings');
   const reflectionText = document.getElementById('reflection-text');
   const hoursSavedEl = document.getElementById('hours-saved');
@@ -28,6 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (data.isFrictionEnabled !== undefined) frictionToggle.checked = data.isFrictionEnabled;
     if (data.isFomoEnabled !== undefined) fomoToggle.checked = data.isFomoEnabled;
     if (data.isSensorEnabled !== undefined) sensorToggle.checked = data.isSensorEnabled;
+    if (data.isDevMode !== undefined) devModeToggle.checked = data.isDevMode;
+    if (data.volume !== undefined) volumeSlider.value = data.volume;
     if (data.currentGoal) currentGoalInput.value = data.currentGoal;
     
     const hSaved = data.hoursSaved || 0;
@@ -61,6 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
       isFrictionEnabled,
       isFomoEnabled,
       isSensorEnabled,
+      isDevMode: devModeToggle.checked,
+      volume: parseInt(volumeSlider.value),
       currentGoal
     }, () => {
       // Refresh UI values immediately
@@ -76,6 +83,21 @@ document.addEventListener('DOMContentLoaded', () => {
         saveBtn.innerText = 'Save Preferences';
         saveBtn.style.background = 'linear-gradient(135deg, #6366f1, #4f46e5)';
       }, 2000);
+    });
+  });
+
+  // Test Sound
+  testSoundBtn.addEventListener('click', () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]) {
+            chrome.scripting.executeScript({
+                target: { tabId: tabs[0].id },
+                func: () => {
+                    if (typeof playAlarm === 'function') playAlarm(1);
+                    else alert("ZenSpend Content Script not loaded on this page.");
+                }
+            });
+        }
     });
   });
 });

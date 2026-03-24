@@ -7,6 +7,10 @@
   "host_permissions": [
     "*://*.amazon.com/*",
     "*://*.amazon.in/*",
+    "*://*.flipkart.com/*",
+    "*://*.myntra.com/*",
+    "*://*.ajio.com/*",
+    "*://*.nykaa.com/*",
     "*://*.shopify.com/*",
     "*://*.walmart.com/*",
     "*://*.target.com/*"
@@ -24,6 +28,10 @@
       "matches": [
         "*://*.amazon.com/*",
         "*://*.amazon.in/*",
+        "*://*.flipkart.com/*",
+        "*://*.myntra.com/*",
+        "*://*.ajio.com/*",
+        "*://*.nykaa.com/*",
         "*://*.shopify.com/*",
         "*://*.walmart.com/*",
         "*://*.target.com/*"

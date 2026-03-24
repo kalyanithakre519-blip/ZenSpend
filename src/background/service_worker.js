@@ -10,6 +10,9 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.set({
     hourlyWage: 50,
     isFrictionEnabled: true,
+    isSensorEnabled: true,
+    isDevMode: true,
+    volume: 100,
     hoursSaved: 0,
     moneySaved: 0,
     lastReflections: [
